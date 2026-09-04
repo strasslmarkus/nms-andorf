@@ -91,8 +91,16 @@
     padding:20px 16px;
     gap:22px;
     position:sticky;top:0;height:100vh;overflow-y:auto;
+    transition:width .15s ease, padding .15s ease;
   }
-  .brand{display:flex;align-items:baseline;gap:8px;padding:2px 4px 4px;}
+  .sidebar.collapsed{
+    width:72px;
+    padding:20px 12px;
+    overflow-x:hidden;
+  }
+  .brand-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .sidebar.collapsed .brand-row{flex-direction:column;align-items:center;gap:8px;}
+  .brand{display:flex;align-items:baseline;gap:8px;padding:2px 4px 4px;min-width:0;}
   .brand .mark{
     width:30px;height:30px;border-radius:7px;
     background:linear-gradient(155deg,var(--accent),var(--accent-strong));
@@ -103,8 +111,22 @@
   .brand h1{font-size:19px;}
   .brand .sub{font-size:11px;color:var(--ink-faint);letter-spacing:.04em;text-transform:uppercase;margin-top:1px;}
 
+  .sidebar-toggle{
+    display:flex;align-items:center;justify-content:center;
+    width:26px;height:26px;padding:0;flex:none;border-radius:6px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--ink-muted);cursor:pointer;margin-top:2px;
+  }
+  .sidebar-toggle:hover{border-color:var(--accent);color:var(--accent-strong);}
+  .sidebar-toggle svg{width:13px;height:13px;flex:none;transition:transform .15s;transform:rotate(90deg);}
+  .sidebar.collapsed .sidebar-toggle svg{transform:rotate(-90deg);}
+
   .side-section{display:flex;flex-direction:column;gap:6px;}
   .side-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-faint);padding:0 8px;margin-bottom:2px;}
+
+  .nav-group-toggle .nav-label{flex:1;}
+  .nav-group-toggle .chev{flex:none;width:14px;height:14px;color:var(--ink-faint);transition:transform .15s;}
+  .nav-group-toggle .chev.open{transform:rotate(180deg);}
+  .sidebar.collapsed .nav-group-toggle .chev{display:none;}
 
   .nav-tab{
     display:flex;align-items:center;gap:9px;
@@ -115,6 +137,18 @@
   .nav-tab:hover{background:var(--surface-2);}
   .nav-tab.active{background:var(--accent-tint);color:var(--accent-strong);font-weight:600;}
   .nav-tab svg{flex:none;width:16px;height:16px;}
+  .nav-subtab{padding-left:28px;font-size:13px;}
+  .sidebar.collapsed .nav-tab{justify-content:center;padding:9px;}
+  .sidebar.collapsed .btn-ghost-add{justify-content:center;}
+  .sidebar.collapsed .save-row{justify-content:center;}
+  .sidebar.collapsed .save-dot{margin-right:0;}
+  .sidebar.collapsed .nav-label,
+  .sidebar.collapsed .side-label,
+  .sidebar.collapsed .brand h1,
+  .sidebar.collapsed .brand .sub,
+  .sidebar.collapsed .sidebar-foot .foot-text{
+    display:none;
+  }
 
   .class-list{display:flex;flex-direction:column;gap:3px;max-height:260px;overflow-y:auto;}
   .class-item{
@@ -132,6 +166,7 @@
     color:var(--ink-muted);font-size:13px;background:none;cursor:pointer;
   }
   .btn-ghost-add:hover{border-color:var(--accent);color:var(--accent-strong);}
+  .btn-ghost-add svg{width:14px;height:14px;flex:none;}
 
   .sidebar-foot{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--ink-faint);display:flex;flex-direction:column;gap:4px;}
   .save-dot{width:7px;height:7px;border-radius:50%;background:var(--good-2);display:inline-block;margin-right:6px;flex:none;transition:background .2s;}
@@ -151,7 +186,8 @@
   .notice-banner strong{color:var(--warn-4);}
 
   /* ---------- Main ---------- */
-  main{flex:1;min-width:0;padding:28px 36px 60px;max-width:1180px;}
+  main{flex:1;min-width:0;padding:28px 36px 60px;max-width:1180px;transition:max-width .15s ease;}
+  #app.sidebar-collapsed main{max-width:1400px;}
   .page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
   .page-head h2{font-size:26px;}
   .page-head .desc{color:var(--ink-muted);font-size:13.5px;margin-top:5px;max-width:52ch;}
@@ -180,6 +216,13 @@
   .card-head h3{font-size:15.5px;}
   .card-head .hint{font-size:12px;color:var(--ink-faint);font-family:var(--font-body);font-weight:400;}
   .card-body{padding:18px;}
+  summary.card-head{cursor:pointer;list-style:none;user-select:none;}
+  summary.card-head::-webkit-details-marker{display:none;}
+  summary.card-head::marker{content:"";}
+  summary.card-head .chev{display:flex;width:16px;height:16px;color:var(--ink-faint);transition:transform .15s;flex:none;}
+  summary.card-head .chev svg{width:100%;height:100%;}
+  details.collapsible-card[open] > summary.card-head .chev{transform:rotate(180deg);}
+  details.collapsible-card > summary.card-head:hover{color:var(--accent-strong);}
 
   .empty-state{padding:40px 20px;text-align:center;color:var(--ink-muted);}
   .empty-state .big{font-family:var(--font-display);font-size:19px;color:var(--ink);margin-bottom:6px;}
@@ -605,11 +648,27 @@
     {id:"mitarbeit", label:"Mitarbeit (Symbol)"},
   ];
 
-  const PERFORMANCE_LEVELS = [
-    {id:"standard_ahs", name:"Standard AHS", min:{1:91,2:81,3:65,4:50,5:0}},
-    {id:"standard", name:"Standard", min:{1:90,2:78,3:55,4:45,5:0}},
-    {id:"erste_klasse", name:"Erste Klasse", min:{1:91,2:79,3:60,4:46,5:0}},
-  ];
+  // Notenschlüssel-Vorlagen (Mindestprozent je Note). Global in den Einstellungen unter
+  // "Fach-Gewichtungsvorlagen" editierbar (Name + Prozentgrenzen); die ids bleiben stabil,
+  // da subject.performanceLevelId darauf verweist.
+  function defaultPerformanceLevels(){
+    return [
+      {id:"standard_ahs", name:"Standard AHS", min:{1:91,2:81,3:65,4:50,5:0}},
+      {id:"standard", name:"Standard", min:{1:90,2:78,3:55,4:45,5:0}},
+      {id:"erste_klasse", name:"Erste Klasse", min:{1:91,2:79,3:60,4:46,5:0}},
+    ];
+  }
+  function ensurePerformanceLevels(s){
+    if(!Array.isArray(s.performanceLevels) || !s.performanceLevels.length){
+      s.performanceLevels = defaultPerformanceLevels();
+      return true;
+    }
+    let changed = false;
+    defaultPerformanceLevels().forEach(def=>{
+      if(!s.performanceLevels.some(l=>l.id===def.id)){ s.performanceLevels.push(def); changed = true; }
+    });
+    return changed;
+  }
 
   const DEFAULT_SUBSKILLS = [
     {name:"Listening", max:9},
@@ -617,6 +676,47 @@
     {name:"Language in Use", max:27},
     {name:"Writing", max:10},
   ];
+
+  // Vorlagen für "Fach anlegen" (Klassenkonfiguration → Fächer & Gewichtung). Die Kategorien
+  // dieser beiden Vorlagen sind global in den Einstellungen (unter "Kategorie-Typen") editierbar —
+  // Änderungen dort wirken sich nur auf künftig neu angelegte Fächer aus, nicht rückwirkend.
+  function defaultSubjectTemplates(){
+    return {
+      einfach: {
+        title: "Einfach",
+        categories: [
+          {id:uid("tcat"), name:"Schularbeiten", weight:50, type:"note"},
+          {id:uid("tcat"), name:"Mitarbeit", weight:50, type:"note"},
+        ],
+      },
+      sprachfach: {
+        title: "Sprachfach",
+        categories: [
+          {id:uid("tcat"), name:"Tests", weight:35, type:"punkte", subskills:DEFAULT_SUBSKILLS.map(s=>({...s}))},
+          {id:uid("tcat"), name:"Revisions", weight:15, type:"punkte", subskills:[{name:"Gesamt", max:20}]},
+          {id:uid("tcat"), name:"Hausübung", weight:20, type:"hausuebung"},
+          {id:uid("tcat"), name:"Mitarbeit", weight:30, type:"mitarbeit"},
+        ],
+      },
+    };
+  }
+  function ensureSubjectTemplates(s){
+    if(!s.subjectTemplates || typeof s.subjectTemplates !== "object"){
+      s.subjectTemplates = defaultSubjectTemplates();
+      return true;
+    }
+    const defaults = defaultSubjectTemplates();
+    let changed = false;
+    ["einfach","sprachfach"].forEach(key=>{
+      if(!s.subjectTemplates[key]){ s.subjectTemplates[key] = defaults[key]; changed = true; }
+      else if(!Array.isArray(s.subjectTemplates[key].categories)){ s.subjectTemplates[key].categories = defaults[key].categories; changed = true; }
+    });
+    return changed;
+  }
+  function templateOptionLabel(tpl){
+    const names = (tpl.categories||[]).map(c=>c.name).join(" / ");
+    return tpl.title + (names ? ": "+names : "");
+  }
 
   // ✓ erledigt · o teilweise · - nicht erledigt · ∀ entschuldigt (zählt nicht)
   const HOMEWORK_SYMBOLS = [
@@ -633,8 +733,9 @@
   })).concat([{sym:"∀", label:"entschuldigt (zählt nicht)", value:null}]);
 
   function performanceLevelFor(subject){
+    ensurePerformanceLevels(state);
     const id = subject && subject.performanceLevelId;
-    return PERFORMANCE_LEVELS.find(l=>l.id===id) || PERFORMANCE_LEVELS[0];
+    return state.performanceLevels.find(l=>l.id===id) || state.performanceLevels[0];
   }
   // Liefert die tatsächlich für dieses Fach geltenden Prozentgrenzen: die Vorlage
   // (Standard AHS/Standard/Erste Klasse), überschrieben durch etwaige in der
@@ -648,7 +749,7 @@
     return preset;
   }
   function percentToMark(percent, level){
-    const lv = level || PERFORMANCE_LEVELS[0];
+    const lv = level || (ensurePerformanceLevels(state), state.performanceLevels[0]);
     if(percent>=lv.min[1]) return 1;
     if(percent>=lv.min[2]) return 2;
     if(percent>=lv.min[3]) return 3;
@@ -713,6 +814,8 @@
     return {
       version:1,
       settings:{ rounding:"down" },
+      subjectTemplates: defaultSubjectTemplates(),
+      performanceLevels: defaultPerformanceLevels(),
       selectedClassId: built.id,
       selectedStudentByClass:{ [built.id]: built.students[0] ? built.students[0].id : null },
       selectedSubjectByClass:{},
@@ -733,10 +836,21 @@
   let fbReady = false;
   let fbDocRef = null;
 
+  // Ein-/Ausklapp-Status der Bereiche in "Klassenkonfiguration" und "Leistungseingabe" —
+  // rein visuell, wird nicht gespeichert/synchronisiert. Standardmäßig eingeklappt (true = eingeklappt).
+  let sectionCollapse = { students:true, subjects:true, weights:true, gradeList:true, einzelnote:true, mehrfachnoten:true };
+
+  // Ein-/Ausklapp-Status des linken Menüs (Seitenleiste) — rein visuell, wird nicht gespeichert.
+  let sidebarCollapsed = false;
+
+  // Ein-/Ausklapp-Status von Untermenü-Gruppen in der Seitenleiste (z. B. "Dashboards") —
+  // rein visuell, wird nicht gespeichert. Standardmäßig eingeklappt (true = eingeklappt).
+  let navGroupCollapse = { dashboards:true };
+
   const LOCAL_BACKUP_KEY = "notenbuch_v1_backup";
 
   function defaultState(){
-    return { version:1, settings:{rounding:"down"}, selectedClassId:null, selectedStudentByClass:{}, selectedSubjectByClass:{}, selectedCategoryByClass:{}, selectedLeistungByCategory:{}, sammelDate:new Date().toISOString().slice(0,10), activeTab:"eingabe", classes:[], grades:[], leistungen:[] };
+    return { version:1, settings:{rounding:"down"}, subjectTemplates:defaultSubjectTemplates(), performanceLevels:defaultPerformanceLevels(), selectedClassId:null, selectedStudentByClass:{}, selectedSubjectByClass:{}, selectedCategoryByClass:{}, selectedLeistungByCategory:{}, sammelDate:new Date().toISOString().slice(0,10), activeTab:"eingabe", classes:[], grades:[], leistungen:[] };
   }
 
   // Stellt sicher, dass jede erfasste Note einer benannten "Leistung" zugeordnet ist
@@ -744,6 +858,8 @@
   // sind. Bestehende Einträge ohne leistungId werden anhand von Fach/Kategorie/Datum/Notiz
   // gruppiert und einer (neuen oder bereits erzeugten) Leistung zugeordnet — nicht destruktiv.
   function ensureLeistungen(state){
+    let templatesChanged = ensureSubjectTemplates(state);
+    templatesChanged = ensurePerformanceLevels(state) || templatesChanged;
     if(!Array.isArray(state.leistungen)) state.leistungen = [];
     if(!state.selectedCategoryByClass) state.selectedCategoryByClass = {};
     if(!state.selectedLeistungByCategory) state.selectedLeistungByCategory = {};
@@ -766,7 +882,7 @@
       g.leistungId = l.id;
       changed = true;
     });
-    return changed;
+    return changed || templatesChanged;
   }
 
   function readLocalBackup(){
@@ -1512,6 +1628,7 @@
     chevronDown: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
     grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
     download: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13"/><path d="M7 11l5 5 5-5"/><path d="M4 20h16"/></svg>',
+    logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
   };
   function icon(name){ const s = el("span",{html:ICONS[name]||""}); return s; }
 
@@ -1548,49 +1665,95 @@
   function render(){
     const app = document.getElementById("app");
     app.innerHTML = "";
+    app.className = sidebarCollapsed ? "sidebar-collapsed" : "";
     app.appendChild(renderSidebar());
     app.appendChild(renderMain());
   }
 
+  // Navigations-Einträge der Seitenleiste: Symbol + Beschriftung + zugehöriger Tab.
+  // Zentral definiert, damit sie im ausgeklappten Zustand (mit Text) und im eingeklappten
+  // Zustand (nur Symbole, siehe .sidebar.collapsed) identisch aufgebaut werden.
+  const SIDEBAR_NAV = [
+    {tab:"eingabe", icon:"book", label:"Klassenkonfiguration"},
+    {tab:"sammel", icon:"grid", label:"Leistungseingabe"},
+    {icon:"chart", label:"Dashboards", group:"dashboards", children:[
+      {tab:"dashboard", icon:"chart", label:"Klassendashboard"},
+      {tab:"elternansicht", icon:"user", label:"Schülerdashboard"},
+    ]},
+    {tab:"export", icon:"download", label:"Export"},
+    {tab:"einstellungen", icon:"settings", label:"Einstellungen"},
+  ];
+
   function renderSidebar(){
     const cls = currentClass();
-    const sidebar = el("div",{class:"sidebar"});
-    sidebar.appendChild(el("div",{class:"brand"},
-      el("div",{class:"mark"},"N"),
-      el("div",{},
-        el("h1",{},"Notenbuch"),
-        el("div",{class:"sub"},"Leistungsdaten & Noten")
-      )
+    const sidebar = el("div",{class:"sidebar"+(sidebarCollapsed?" collapsed":"")});
+    sidebar.appendChild(el("div",{class:"brand-row"},
+      el("div",{class:"brand"},
+        el("div",{class:"mark"},"N"),
+        el("div",{},
+          el("h1",{},"Notenbuch"),
+          el("div",{class:"sub"},"Leistungsdaten & Noten")
+        )
+      ),
+      el("button",{
+        class:"sidebar-toggle", type:"button",
+        title: sidebarCollapsed ? "Menü ausklappen" : "Menü einklappen",
+        onclick:()=>{ sidebarCollapsed = !sidebarCollapsed; render(); }
+      }, icon("chevronDown"))
     ));
 
     const tabWrap = el("div",{class:"side-section"});
-    tabWrap.appendChild(el("button",{class:"nav-tab"+(state.activeTab==="eingabe"?" active":""), onclick:()=>mutate(()=>state.activeTab="eingabe")}, icon("book"), "Klassenkonfiguration"));
-    tabWrap.appendChild(el("button",{class:"nav-tab"+(state.activeTab==="sammel"?" active":""), onclick:()=>mutate(()=>state.activeTab="sammel")}, icon("grid"), "Leistungseingabe"));
-    tabWrap.appendChild(el("button",{class:"nav-tab"+(state.activeTab==="dashboard"?" active":""), onclick:()=>mutate(()=>state.activeTab="dashboard")}, icon("chart"), "Dashboard"));
-    tabWrap.appendChild(el("button",{class:"nav-tab"+(state.activeTab==="elternansicht"?" active":""), onclick:()=>mutate(()=>state.activeTab="elternansicht")}, icon("user"), "Schülerdashboard"));
-    tabWrap.appendChild(el("button",{class:"nav-tab"+(state.activeTab==="export"?" active":""), onclick:()=>mutate(()=>state.activeTab="export")}, icon("download"), "Export"));
-    tabWrap.appendChild(el("button",{class:"nav-tab"+(state.activeTab==="einstellungen"?" active":""), onclick:()=>mutate(()=>state.activeTab="einstellungen")}, icon("settings"), "Einstellungen"));
+    SIDEBAR_NAV.forEach(entry=>{
+      if(entry.children){
+        const isOpen = !navGroupCollapse[entry.group] || entry.children.some(c=>c.tab===state.activeTab);
+        if(!sidebarCollapsed){
+          tabWrap.appendChild(el("button",{
+            class:"nav-tab nav-group-toggle",
+            type:"button",
+            title: entry.label,
+            onclick:()=>{ navGroupCollapse[entry.group] = !navGroupCollapse[entry.group]; render(); }
+          }, icon(entry.icon), el("span",{class:"nav-label"}, entry.label), el("span",{class:"chev"+(isOpen?" open":"")}, icon("chevronDown"))));
+        }
+        if(sidebarCollapsed || isOpen){
+          entry.children.forEach(child=>{
+            tabWrap.appendChild(el("button",{
+              class:"nav-tab nav-subtab"+(state.activeTab===child.tab?" active":""),
+              title: child.label,
+              onclick:()=>mutate(()=>state.activeTab=child.tab)
+            }, icon(child.icon), el("span",{class:"nav-label"}, child.label)));
+          });
+        }
+      } else {
+        tabWrap.appendChild(el("button",{
+          class:"nav-tab"+(state.activeTab===entry.tab?" active":""),
+          title: entry.label,
+          onclick:()=>mutate(()=>state.activeTab=entry.tab)
+        }, icon(entry.icon), el("span",{class:"nav-label"}, entry.label)));
+      }
+    });
     sidebar.appendChild(tabWrap);
 
-    const classSection = el("div",{class:"side-section"});
-    classSection.appendChild(el("div",{class:"side-label"},"Klassen"));
-    const list = el("div",{class:"class-list"});
-    state.classes.forEach(c=>{
-      list.appendChild(el("div",{
-        class:"class-item"+(cls&&cls.id===c.id?" active":""), tabindex:"0",
-        onclick:()=>mutate(()=>state.selectedClassId=c.id)
-      }, el("span",{},c.name), el("span",{class:"count"},c.students.length+" S")));
-    });
-    classSection.appendChild(list);
-    classSection.appendChild(el("button",{class:"btn-ghost-add", onclick:addClass}, icon("plus"), "Neue Klasse"));
-    sidebar.appendChild(classSection);
+    if(!sidebarCollapsed){
+      const classSection = el("div",{class:"side-section"});
+      classSection.appendChild(el("div",{class:"side-label"},"Klassen"));
+      const list = el("div",{class:"class-list"});
+      state.classes.forEach(c=>{
+        list.appendChild(el("div",{
+          class:"class-item"+(cls&&cls.id===c.id?" active":""), tabindex:"0",
+          onclick:()=>mutate(()=>state.selectedClassId=c.id)
+        }, el("span",{},c.name), el("span",{class:"count"},c.students.length+" S")));
+      });
+      classSection.appendChild(list);
+      classSection.appendChild(el("button",{class:"btn-ghost-add", onclick:addClass}, icon("plus"), "Neue Klasse"));
+      sidebar.appendChild(classSection);
+    }
 
     const foot = el("div",{class:"sidebar-foot"});
-    foot.appendChild(el("div",{class:"save-row"}, el("span",{id:"save-dot", class:"save-dot"}), el("span",{id:"save-label"},"Gespeichert")));
-    foot.appendChild(el("div",{},"Österreichische Notenskala 1–5"));
-    foot.appendChild(el("button",{id:"logout-btn", class:"btn-ghost-add", style:"margin-top:8px;", onclick:()=>{
+    foot.appendChild(el("div",{class:"save-row"}, el("span",{id:"save-dot", class:"save-dot"}), el("span",{id:"save-label", class:"nav-label"},"Gespeichert")));
+    foot.appendChild(el("div",{class:"foot-text"},"Österreichische Notenskala 1–5"));
+    foot.appendChild(el("button",{id:"logout-btn", class:"btn-ghost-add", style:"margin-top:8px;", title:"Abmelden", onclick:()=>{
       if(typeof window.__notenbuchLogout === "function") window.__notenbuchLogout();
-    }}, "Abmelden"));
+    }}, icon("logout"), el("span",{class:"nav-label"},"Abmelden")));
     sidebar.appendChild(foot);
 
     return sidebar;
@@ -1641,7 +1804,7 @@
     wrap.appendChild(el("div",{class:"page-head"},
       el("div",{},
         el("h2",{},cls.name),
-        el("div",{class:"desc"},"Schüler, Fächer, Gewichtungen und einzelne Noten verwalten.")
+        el("div",{class:"desc"},"Schüler, Fächer und Gewichtungen verwalten.")
       ),
       el("div",{class:"head-actions"},
         el("button",{class:"btn btn-danger btn-sm", onclick:()=>deleteClass(cls.id)}, icon("trash"), "Klasse löschen")
@@ -1650,8 +1813,7 @@
 
     wrap.appendChild(renderStudentsCard(cls));
     wrap.appendChild(renderSubjectsCard(cls));
-    wrap.appendChild(renderGradeEntryCard(cls));
-    wrap.appendChild(renderGradeListCard(cls));
+    wrap.appendChild(renderWeightsCard(cls));
     return wrap;
   }
 
@@ -1665,10 +1827,20 @@
     });
   }
 
-  function renderStudentsCard(cls){
-    const card = el("div",{class:"card"});
-    card.appendChild(el("div",{class:"card-head"}, el("h3",{},"Schüler"), el("span",{class:"hint"},cls.students.length+" eingetragen")));
+  // Baut eine ein-/ausklappbare Karte (natives <details>/<summary>), deren Auf-/Zu-Status in
+  // sectionCollapse persistiert wird — bleibt so auch nach einem Re-Render (z. B. nach dem
+  // Hinzufügen eines Schülers) erhalten, statt bei jeder Änderung wieder zuzuklappen.
+  function collapsibleCard(key, headChildren){
+    const card = el("details",{class:"card collapsible-card", open: sectionCollapse[key] ? false : true});
+    card.addEventListener("toggle", ()=>{ sectionCollapse[key] = !card.open; });
+    card.appendChild(el("summary",{class:"card-head"}, ...headChildren, el("span",{class:"chev"}, icon("chevronDown"))));
     const body = el("div",{class:"card-body"});
+    card.appendChild(body);
+    return {card, body};
+  }
+
+  function renderStudentsCard(cls){
+    const {card, body} = collapsibleCard("students", [el("h3",{},"Schüler"), el("span",{class:"hint"},cls.students.length+" eingetragen")]);
 
     const form = el("form",{class:"form-row", onsubmit:(e)=>{
       e.preventDefault();
@@ -1710,13 +1882,12 @@
   }
 
   function renderSubjectsCard(cls){
-    const card = el("div",{class:"card"});
-    card.appendChild(el("div",{class:"card-head"}, el("h3",{},"Fächer & Gewichtung"), el("span",{class:"hint"},"Kategorien ergeben zusammen die Fachnote")));
-    const body = el("div",{class:"card-body"});
+    const {card, body} = collapsibleCard("subjects", [el("h3",{},"Fächer"), el("span",{class:"hint"},cls.subjects.length+" angelegt")]);
 
+    ensureSubjectTemplates(state);
     const templateSel = el("select",{},
-      el("option",{value:"einfach"},"Einfach: Schularbeiten / Mitarbeit"),
-      el("option",{value:"sprachfach"},"Sprachfach: Tests / Revisions / Hausübung / Mitarbeit")
+      el("option",{value:"einfach"}, templateOptionLabel(state.subjectTemplates.einfach)),
+      el("option",{value:"sprachfach"}, templateOptionLabel(state.subjectTemplates.sprachfach))
     );
     const addForm = el("form",{class:"form-row", onsubmit:(e)=>{
       e.preventDefault();
@@ -1724,19 +1895,11 @@
       const name = input.value.trim();
       if(!name) return;
       mutate(()=>{
-        if(templateSel.value==="sprachfach"){
-          cls.subjects.push({id:uid("sub"), name, performanceLevelId:"standard_ahs", categories:[
-            {id:uid("cat"), name:"Tests", weight:35, type:"punkte", subskills:DEFAULT_SUBSKILLS.map(s=>({...s}))},
-            {id:uid("cat"), name:"Revisions", weight:15, type:"punkte", subskills:[{name:"Gesamt", max:20}]},
-            {id:uid("cat"), name:"Hausübung", weight:20, type:"hausuebung"},
-            {id:uid("cat"), name:"Mitarbeit", weight:30, type:"mitarbeit"},
-          ]});
-        } else {
-          cls.subjects.push({id:uid("sub"), name, categories:[
-            {id:uid("cat"), name:"Schularbeiten", weight:50, type:"note"},
-            {id:uid("cat"), name:"Mitarbeit", weight:50, type:"note"},
-          ]});
-        }
+        const tpl = state.subjectTemplates[templateSel.value] || state.subjectTemplates.einfach;
+        const categories = tpl.categories.map(c=>({...c, id:uid("cat"), subskills: c.subskills ? c.subskills.map(s=>({...s})) : undefined}));
+        const newSubject = {id:uid("sub"), name, categories};
+        if(templateSel.value==="sprachfach") newSubject.performanceLevelId = "standard_ahs";
+        cls.subjects.push(newSubject);
       });
     }});
     addForm.appendChild(el("label",{class:"field"},"Neues Fach", el("input",{type:"text", placeholder:"z. B. Englisch"})));
@@ -1744,34 +1907,60 @@
     addForm.appendChild(el("button",{class:"btn btn-primary btn-sm", type:"submit"}, icon("plus"), "Fach anlegen"));
     body.appendChild(addForm);
 
-    cls.subjects.forEach(subject=>{
-      body.appendChild(renderSubjectBlock(cls, subject));
+    if(cls.subjects.length){
+      const listWrap = el("div",{class:"table-wrap", style:"margin-top:14px;"});
+      const table = el("table",{});
+      table.appendChild(el("thead",{}, el("tr",{}, el("th",{},"Name"), el("th",{},""))));
+      const tbody = el("tbody",{});
+      cls.subjects.forEach(subject=>{
+        tbody.appendChild(el("tr",{},
+          el("td",{},subject.name),
+          el("td",{}, el("div",{class:"row-actions"}, el("button",{class:"icon-btn", title:"Fach löschen", onclick:()=>removeSubject(cls, subject.id)}, icon("trash"))))
+        ));
+      });
+      table.appendChild(tbody);
+      listWrap.appendChild(table);
+      body.appendChild(listWrap);
+    }
+
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderWeightsCard(cls){
+    const {card, body} = collapsibleCard("weights", [el("h3",{},"Notengewichtung"), el("span",{class:"hint"},"Kategorien ergeben zusammen die Fachnote")]);
+
+    if(!cls.subjects.length){
+      body.appendChild(el("div",{class:"empty-state"}, el("p",{},"Lege zuerst ein Fach unter „Fächer“ an, um Kategorien und Gewichte festzulegen.")));
+      card.appendChild(body);
+      return card;
+    }
+
+    cls.subjects.forEach((subject,idx)=>{
+      body.appendChild(renderSubjectWeightsBlock(cls, subject, idx>0));
     });
 
     card.appendChild(body);
     return card;
   }
 
-  function renderSubjectBlock(cls, subject){
-    const block = el("div",{style:"margin-top:18px;padding-top:16px;border-top:1px solid var(--line);"});
-    const head = el("div",{style:"display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;"},
-      el("strong",{style:"font-size:14px;"}, subject.name),
-      el("button",{class:"icon-btn", title:"Fach löschen", onclick:()=>removeSubject(cls, subject.id)}, icon("trash"))
-    );
-    block.appendChild(head);
+  function renderSubjectWeightsBlock(cls, subject, withTopBorder){
+    const block = el("div",{style: withTopBorder ? "margin-top:18px;padding-top:16px;border-top:1px solid var(--line);" : ""});
+    block.appendChild(el("strong",{style:"font-size:14px;display:block;margin-bottom:10px;"}, subject.name));
 
     const usesPunkte = subject.categories.some(c=>c.type==="punkte");
     if(usesPunkte){
-      const lvlSel = el("select",{}, PERFORMANCE_LEVELS.map(l=>el("option",{value:l.id, selected:(subject.performanceLevelId||"standard_ahs")===l.id?"selected":false}, l.name)));
+      ensurePerformanceLevels(state);
+      const lvlSel = el("select",{}, state.performanceLevels.map(l=>el("option",{value:l.id, selected:(subject.performanceLevelId||"standard_ahs")===l.id?"selected":false}, l.name)));
       lvlSel.value = subject.performanceLevelId || "standard_ahs";
       lvlSel.addEventListener("change", ()=>mutate(()=>{
         subject.performanceLevelId = lvlSel.value;
-        const preset = PERFORMANCE_LEVELS.find(l=>l.id===lvlSel.value) || PERFORMANCE_LEVELS[0];
+        const preset = state.performanceLevels.find(l=>l.id===lvlSel.value) || state.performanceLevels[0];
         subject.customThresholds = {1:preset.min[1], 2:preset.min[2], 3:preset.min[3], 4:preset.min[4]};
       }));
       block.appendChild(el("label",{class:"field", style:"max-width:280px;margin-bottom:12px;"}, "Notenschlüssel (Vorlage)", lvlSel));
 
-      const basePreset = PERFORMANCE_LEVELS.find(l=>l.id===(subject.performanceLevelId||"standard_ahs")) || PERFORMANCE_LEVELS[0];
+      const basePreset = state.performanceLevels.find(l=>l.id===(subject.performanceLevelId||"standard_ahs")) || state.performanceLevels[0];
       if(!subject.customThresholds) subject.customThresholds = {1:basePreset.min[1], 2:basePreset.min[2], 3:basePreset.min[3], 4:basePreset.min[4]};
       const thBox = el("div",{style:"margin-bottom:14px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface-2);"});
       thBox.appendChild(el("div",{style:"font-size:13px;font-weight:700;margin-bottom:3px;"}, "Prozentgrenzen je Note (Mindestprozent)"));
@@ -1879,9 +2068,7 @@
   }
 
   function renderGradeEntryCard(cls){
-    const card = el("div",{class:"card"});
-    card.appendChild(el("div",{class:"card-head"}, el("h3",{},"Note eintragen")));
-    const body = el("div",{class:"card-body"});
+    const {card, body} = collapsibleCard("einzelnote", [el("h3",{},"Einzelnote eintragen")]);
 
     if(!cls.students.length || !cls.subjects.length){
       body.appendChild(el("div",{class:"empty-state"}, el("p",{},"Lege zuerst mindestens einen Schüler und ein Fach mit Kategorie an.")));
@@ -2025,10 +2212,8 @@
   }
 
   function renderGradeListCard(cls){
-    const card = el("div",{class:"card"});
     const entries = state.grades.filter(g=>g.classId===cls.id).slice().sort((a,b)=>b.date.localeCompare(a.date));
-    card.appendChild(el("div",{class:"card-head"}, el("h3",{},"Erfasste Noten"), el("span",{class:"hint"},entries.length+" Einträge")));
-    const body = el("div",{class:"card-body"});
+    const {card, body} = collapsibleCard("gradeList", [el("h3",{},"Erfasste Noten"), el("span",{class:"hint"},entries.length+" Einträge")]);
     if(!entries.length){
       body.appendChild(el("div",{class:"empty-state"}, el("p",{},"Noch keine Noten erfasst.")));
     } else {
@@ -2113,6 +2298,8 @@
     infoCard.appendChild(infoBody);
     wrap.appendChild(infoCard);
 
+    wrap.appendChild(renderSubjectTemplatesCard());
+
     const backupCard = el("div",{class:"card"});
     backupCard.appendChild(el("div",{class:"card-head"}, el("h3",{},"Datensicherung")));
     const backupBody = el("div",{class:"card-body"});
@@ -2153,6 +2340,110 @@
     diagBody.appendChild(diagBox);
     diagCard.appendChild(diagBody);
     wrap.appendChild(diagCard);
+
+    return wrap;
+  }
+
+  // Globale Kategorien-Vorlagen für "Fach anlegen" (Einfach / Sprachfach) — editierbar in den
+  // Einstellungen. Änderungen wirken sich nur auf künftig neu angelegte Fächer aus.
+  function renderSubjectTemplatesCard(){
+    ensureSubjectTemplates(state);
+    ensurePerformanceLevels(state);
+    const card = el("div",{class:"card"});
+    card.appendChild(el("div",{class:"card-head"},
+      el("h3",{},"Fach-Gewichtungsvorlagen"),
+      el("span",{class:"hint"},"Kategorien und Notenschlüssel für „Fach anlegen“")
+    ));
+    const body = el("div",{class:"card-body"});
+    body.appendChild(el("p",{style:"color:var(--ink-muted);font-size:13px;max-width:60ch;margin:0 0 14px;"},
+      "Legt fest, welche Kategorien beim Anlegen eines neuen Fachs über die jeweilige Vorlage vorgeschlagen werden. Bestehende Fächer ändern sich dadurch nicht rückwirkend."));
+
+    ["einfach","sprachfach"].forEach((key,idx)=>{
+      const tpl = state.subjectTemplates[key];
+      const section = el("div",{style: idx>0 ? "margin-top:22px;padding-top:18px;border-top:1px solid var(--line);" : ""});
+      const titleInput = el("input",{type:"text", value:tpl.title, style:"max-width:220px;"});
+      titleInput.addEventListener("change", ()=>mutate(()=>tpl.title = titleInput.value.trim() || tpl.title));
+      section.appendChild(el("label",{class:"field", style:"max-width:260px;margin-bottom:12px;"}, "Vorlagenname", titleInput));
+      section.appendChild(renderTemplateCategoriesTable(tpl));
+      body.appendChild(section);
+    });
+
+    const nsSection = el("div",{style:"margin-top:22px;padding-top:18px;border-top:1px solid var(--line);"});
+    nsSection.appendChild(el("h4",{style:"font-size:14px;margin:0 0 4px;"}, "Notenschlüssel-Vorlagen"));
+    nsSection.appendChild(el("p",{style:"color:var(--ink-muted);font-size:13px;max-width:60ch;margin:0 0 14px;"},
+      "Bestimmt die Mindestprozentsätze je Note für Fächer mit „Punkte → Notenschlüssel“-Kategorien. Neue Fächer übernehmen den gewählten Notenschlüssel als Ausgangswert; bereits angelegte Fächer behalten ihre eigenen (dort individuell anpassbaren) Prozentgrenzen."));
+    state.performanceLevels.forEach((lvl,idx)=>{
+      const row = el("div",{style: idx>0 ? "margin-top:16px;padding-top:16px;border-top:1px dashed var(--line);" : ""});
+      const nameInput = el("input",{type:"text", value:lvl.name, style:"max-width:220px;"});
+      nameInput.addEventListener("change", ()=>mutate(()=>lvl.name = nameInput.value.trim() || lvl.name));
+      row.appendChild(el("label",{class:"field", style:"max-width:260px;margin-bottom:10px;"}, "Name", nameInput));
+      const thFields = el("div",{style:"display:flex;gap:12px;flex-wrap:wrap;"});
+      [1,2,3,4].forEach(grade=>{
+        const input = el("input",{type:"number", value:String(lvl.min[grade]), min:"0", max:"100", step:"1", style:"width:80px;"});
+        input.addEventListener("change", ()=>mutate(()=>{
+          lvl.min[grade] = Math.max(0, Math.min(100, parseFloat((input.value||"0").replace(",","."))||0));
+        }));
+        thFields.appendChild(el("label",{class:"field", style:"flex:0 0 auto;min-width:110px;"}, "Note "+grade+" ab %", input));
+      });
+      row.appendChild(thFields);
+      nsSection.appendChild(row);
+    });
+    body.appendChild(nsSection);
+
+    card.appendChild(body);
+    return card;
+  }
+
+  function renderTemplateCategoriesTable(tpl){
+    const wrap = el("div",{});
+    const catTable = el("table",{});
+    catTable.appendChild(el("thead",{}, el("tr",{}, el("th",{},"Kategorie"), el("th",{style:"width:150px"},"Typ"), el("th",{style:"width:90px"},"Gewicht %"), el("th",{}))));
+    const tbody = el("tbody",{});
+    tpl.categories.forEach(cat=>{
+      if(!cat.type) cat.type = "note";
+      const nameInput = el("input",{type:"text", value:cat.name, style:"width:100%;"});
+      nameInput.addEventListener("change", ()=>mutate(()=>cat.name=nameInput.value.trim()||cat.name));
+      const typeSel = el("select",{}, CATEGORY_TYPES.map(t=>el("option",{value:t.id}, t.label)));
+      typeSel.value = cat.type;
+      typeSel.addEventListener("change", ()=>mutate(()=>{
+        cat.type = typeSel.value;
+        if(cat.type==="punkte" && !cat.subskills) cat.subskills = DEFAULT_SUBSKILLS.map(s=>({...s}));
+      }));
+      const weightInput = el("input",{type:"number", value:cat.weight, min:"0", max:"100", style:"width:70px;"});
+      weightInput.addEventListener("change", ()=>mutate(()=>cat.weight=Math.max(0, Number(weightInput.value)||0)));
+      tbody.appendChild(el("tr",{},
+        el("td",{}, nameInput),
+        el("td",{}, typeSel),
+        el("td",{}, weightInput),
+        el("td",{}, el("div",{class:"row-actions"}, el("button",{class:"icon-btn", type:"button", title:"Kategorie löschen", onclick:()=>mutate(()=>tpl.categories = tpl.categories.filter(c=>c!==cat))}, icon("trash"))))
+      ));
+      if(cat.type==="punkte"){
+        const sub = el("tr",{});
+        const td = el("td",{colspan:"4", style:"padding-top:0;padding-bottom:14px;border-bottom:1px solid var(--line);"});
+        td.appendChild(renderSubskillsEditor(cat));
+        sub.appendChild(td);
+        tbody.appendChild(sub);
+      }
+    });
+    catTable.appendChild(tbody);
+    wrap.appendChild(el("div",{class:"table-wrap"}, catTable));
+
+    const sum = tpl.categories.reduce((a,c)=>a+(Number(c.weight)||0),0);
+    if(tpl.categories.length && sum !== 100){
+      wrap.appendChild(el("div",{class:"weight-warn"}, "⚠ Gewichte ergeben "+sum+"% (werden bei neu angelegten Fächern automatisch normalisiert)."));
+    }
+
+    const addCatForm = el("form",{class:"form-row", style:"margin-top:10px;", onsubmit:(e)=>{
+      e.preventDefault();
+      const input = addCatForm.querySelector("input");
+      const name = input.value.trim();
+      if(!name) return;
+      mutate(()=>tpl.categories.push({id:uid("tcat"), name, weight:0, type:"note"}));
+      input.value = "";
+    }});
+    addCatForm.appendChild(el("label",{class:"field"},"Neue Kategorie", el("input",{type:"text", placeholder:"z. B. Referate"})));
+    addCatForm.appendChild(el("button",{class:"btn btn-sm", type:"submit"}, icon("plus"), "Hinzufügen"));
+    wrap.appendChild(addCatForm);
 
     return wrap;
   }
@@ -2345,27 +2636,35 @@
   }
 
   function renderSammeleingabe(cls){
+    const wrap = el("div",{});
+    wrap.appendChild(el("div",{class:"page-head"},
+      el("div",{}, el("h2",{},"Leistungseingabe"), el("div",{class:"desc"},"Einzelne Note eintragen oder eine Leistung für alle Schüler:innen auf einmal bewerten."))
+    ));
+
+    wrap.appendChild(renderGradeEntryCard(cls));
+    wrap.appendChild(renderMehrfachnotenCard(cls));
+    wrap.appendChild(renderGradeListCard(cls));
+    return wrap;
+  }
+
+  function renderMehrfachnotenCard(cls){
+    const {card, body} = collapsibleCard("mehrfachnoten", [el("h3",{},"Mehrfachnoten eintragen"), el("span",{class:"hint"},"Eine Leistung, alle Schüler:innen auf einen Blick")]);
+
     state.selectedSubjectByClass = state.selectedSubjectByClass || {};
     state.selectedCategoryByClass = state.selectedCategoryByClass || {};
     state.selectedLeistungByCategory = state.selectedLeistungByCategory || {};
     if(!state.sammelDate) state.sammelDate = new Date().toISOString().slice(0,10);
 
-    const wrap = el("div",{});
-    wrap.appendChild(el("div",{class:"page-head"},
-      el("div",{}, el("h2",{},"Leistungseingabe"), el("div",{class:"desc"},"Zuerst die Leistung wählen (z. B. „2. Test“, „Hausübung KW12“), dann Schüler:innen direkt in der Tabelle bewerten."))
-    ));
-
     if(!cls.students.length || !cls.subjects.length){
-      wrap.appendChild(el("div",{class:"card"}, el("div",{class:"empty-state"}, el("p",{},"Lege zuerst mindestens einen Schüler und ein Fach mit Kategorie an."))));
-      return wrap;
+      body.appendChild(el("div",{class:"empty-state"}, el("p",{},"Lege zuerst mindestens einen Schüler und ein Fach mit Kategorie an.")));
+      return card;
     }
 
     let subjId = state.selectedSubjectByClass[cls.id];
     if(!subjId || !cls.subjects.find(s=>s.id===subjId)) subjId = cls.subjects[0].id;
     const subj = cls.subjects.find(s=>s.id===subjId);
 
-    const controls = el("div",{class:"card"});
-    const controlsBody = el("div",{class:"card-body", style:"display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;"});
+    const controlsBody = el("div",{style:"display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;"});
     if(cls.subjects.length>1){
       const subjSel = el("select",{}, cls.subjects.map(s=>el("option",{value:s.id, selected:s.id===subjId?"selected":false}, s.name)));
       subjSel.value = subjId;
@@ -2374,10 +2673,9 @@
     }
 
     if(!subj.categories.length){
-      controls.appendChild(controlsBody);
-      wrap.appendChild(controls);
-      wrap.appendChild(el("div",{class:"card"}, el("div",{class:"empty-state"}, el("p",{},"Dieses Fach hat noch keine Kategorien. Lege sie unter „Klassenkonfiguration“ an."))));
-      return wrap;
+      body.appendChild(controlsBody);
+      body.appendChild(el("div",{class:"empty-state"}, el("p",{},"Dieses Fach hat noch keine Kategorien. Lege sie unter „Klassenkonfiguration“ an.")));
+      return card;
     }
 
     let catId = state.selectedCategoryByClass[cls.id];
@@ -2424,19 +2722,21 @@
       controlsBody.appendChild(el("div",{class:"field", style:"flex:0 0 auto;"}, editBtn));
     }
 
-    controls.appendChild(controlsBody);
-    wrap.appendChild(controls);
+    body.appendChild(controlsBody);
 
     const currentLeistung = state.leistungen.find(l=>l.id===leistungSel.value);
     if(!currentLeistung){
-      wrap.appendChild(el("div",{class:"card"}, el("div",{class:"empty-state"}, el("p",{},"Lege zuerst eine Leistung an (z. B. „2. Test“ oder „Hausübung KW12“), um Bewertungen einzutragen."))));
-      return wrap;
+      body.appendChild(el("div",{class:"empty-state"}, el("p",{},"Lege zuerst eine Leistung an (z. B. „2. Test“ oder „Hausübung KW12“), um Bewertungen einzutragen.")));
+      return card;
     }
 
     const students = cls.students.slice().sort((a,b)=>a.name.localeCompare(b.name));
 
-    const tableCard = el("div",{class:"card"});
-    tableCard.appendChild(el("div",{class:"card-head"}, el("h3",{}, currentLeistung.name), el("span",{class:"hint"}, cat.name+" · "+currentLeistung.date+" · Klick = Bewertung setzen · nochmal klicken = entfernen")));
+    const tableBlock = el("div",{style:"margin-top:18px;padding-top:16px;border-top:1px solid var(--line);"});
+    tableBlock.appendChild(el("div",{style:"display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px;"},
+      el("strong",{style:"font-size:14px;"}, currentLeistung.name),
+      el("span",{class:"hint"}, cat.name+" · "+currentLeistung.date+" · Klick = Bewertung setzen · nochmal klicken = entfernen")
+    ));
     const table = el("table",{class:"sammel-table"});
     table.appendChild(el("thead",{}, el("tr",{},
       el("th",{},"Schüler:in"),
@@ -2453,17 +2753,17 @@
       tbody.appendChild(row);
     });
     table.appendChild(tbody);
-    tableCard.appendChild(el("div",{class:"table-wrap"}, table));
+    tableBlock.appendChild(el("div",{class:"table-wrap"}, table));
 
     const syms = symbolsFor(cat.type);
     if(syms){
-      const legend = el("div",{class:"legend", style:"padding:0 18px 16px;"});
+      const legend = el("div",{class:"legend", style:"margin-top:10px;"});
       legend.appendChild(el("span",{}, el("strong",{},cat.name+": "), syms.map(s=>s.sym+" "+s.label).join(" · ")));
-      tableCard.appendChild(legend);
+      tableBlock.appendChild(legend);
     }
 
-    wrap.appendChild(tableCard);
-    return wrap;
+    body.appendChild(tableBlock);
+    return card;
   }
 
   /* ============================= EXPORT ============================= */
@@ -2709,7 +3009,7 @@
   function renderDashboard(cls){
     const wrap = el("div",{});
     wrap.appendChild(el("div",{class:"page-head"},
-      el("div",{}, el("h2",{},cls.name+" — Dashboard"), el("div",{class:"desc"},"Aktueller Leistungsstand auf einen Blick."))
+      el("div",{}, el("h2",{},cls.name+" — Klassendashboard"), el("div",{class:"desc"},"Aktueller Leistungsstand auf einen Blick."))
     ));
 
     const results = []; // {student, perSubject:{subjectId:{raw,rounded}}, overallRaw}
