@@ -506,16 +506,31 @@
   }
   function authErrorMessage(err){
     const code = err && err.code;
+    let msg;
     if(code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"){
-      return "Benutzername oder Passwort ist falsch.";
+      msg = "Benutzername oder Passwort ist falsch.";
+    }else if(code === "auth/too-many-requests"){
+      msg = "Zu viele fehlgeschlagene Versuche. Bitte kurz warten und erneut versuchen.";
+    }else if(code === "auth/network-request-failed"){
+      msg = "Keine Verbindung zum Anmeldeserver möglich. Bitte Internetverbindung prüfen.";
+    }else if(code === "auth/configuration-not-found" || code === "auth/operation-not-allowed"){
+      msg = "Die Anmeldung ist in Firebase noch nicht aktiviert (E-Mail/Passwort-Anmeldung fehlt in der Firebase-Konsole).";
+    }else if(code === "auth/unauthorized-domain"){
+      msg = "Diese Webadresse ist in Firebase noch nicht als autorisierte Domain freigegeben.";
+    }else if(code === "auth/timeout-lokal"){
+      msg = "Zeitüberschreitung: Der Anmeldeserver antwortet nicht. Bitte Internetverbindung, Firewall oder Werbeblocker prüfen und erneut versuchen.";
+    }else{
+      msg = "Anmeldung fehlgeschlagen. Bitte erneut versuchen.";
     }
-    if(code === "auth/too-many-requests"){
-      return "Zu viele fehlgeschlagene Versuche. Bitte kurz warten und erneut versuchen.";
-    }
-    if(code === "auth/network-request-failed"){
-      return "Keine Verbindung möglich. Bitte Internetverbindung prüfen.";
-    }
-    return "Anmeldung fehlgeschlagen. Bitte erneut versuchen.";
+    const detail = code ? ("Code: " + code) : ((err && (err.message || err.name)) ? String(err.message || err.name) : "kein Fehlercode erhalten");
+    return msg + "  (" + detail + ")";
+  }
+
+  function withTimeout(promise, ms){
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject({code:"auth/timeout-lokal"}), ms))
+    ]);
   }
 
   loginForm.addEventListener("submit", async function(e){
@@ -524,8 +539,12 @@
     loginSubmit.disabled = true;
     loginSubmit.textContent = "Anmelden…";
     try{
-      await signInWithEmailAndPassword(firebaseAuthInst, usernameToEmail(loginUser.value), loginPass.value);
+      await withTimeout(
+        signInWithEmailAndPassword(firebaseAuthInst, usernameToEmail(loginUser.value), loginPass.value),
+        15000
+      );
     }catch(err){
+      console.error("Notenbuch-Anmeldefehler:", err);
       showLoginError(authErrorMessage(err));
       loginSubmit.disabled = false;
       loginSubmit.textContent = "Anmelden";
@@ -554,6 +573,21 @@
       }
     }
   });
+</script>
+
+<script>
+  // Wächter: Falls das Firebase-Modul (z. B. wegen Werbeblocker, Firewall oder fehlender
+  // Internetverbindung) gar nicht laden konnte, bleibt die Anmeldemaske sonst stumm hängen.
+  // Nach kurzer Wartezeit wird dann ein erklärender Hinweis eingeblendet.
+  setTimeout(function(){
+    if(!window.__firebase){
+      var errBox = document.getElementById("login-error");
+      if(errBox){
+        errBox.textContent = "Die Anmeldung konnte nicht geladen werden (Firebase nicht erreichbar). Bitte Internetverbindung prüfen, Werbeblocker/Schutz-Erweiterungen kurz deaktivieren und die Seite neu laden.";
+        errBox.classList.add("show");
+      }
+    }
+  }, 6000);
 </script>
 
 <script>
