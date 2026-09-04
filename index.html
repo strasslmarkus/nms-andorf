@@ -1861,7 +1861,23 @@
   function renderStudentsCard(cls){
     const {card, body} = collapsibleCard("students", [el("h3",{},"Schüler"), el("span",{class:"hint"},cls.students.length+" eingetragen")]);
 
-    const form = el("form",{class:"form-row", onsubmit:(e)=>{
+    if(cls.students.length){
+      const listWrap = el("div",{class:"table-wrap"});
+      const table = el("table",{});
+      table.appendChild(el("thead",{}, el("tr",{}, el("th",{},"Name"), el("th",{},""))));
+      const tbody = el("tbody",{});
+      cls.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(s=>{
+        tbody.appendChild(el("tr",{},
+          el("td",{},s.name),
+          el("td",{}, el("div",{class:"row-actions"}, el("button",{class:"icon-btn", title:"Entfernen", onclick:()=>removeStudent(cls,s.id)}, icon("trash"))))
+        ));
+      });
+      table.appendChild(tbody);
+      listWrap.appendChild(table);
+      body.appendChild(listWrap);
+    }
+
+    const form = el("form",{class:"form-row", style:cls.students.length?"margin-top:14px;":undefined, onsubmit:(e)=>{
       e.preventDefault();
       const input = form.querySelector("input");
       const name = input.value.trim();
@@ -1872,21 +1888,6 @@
     form.appendChild(el("button",{class:"btn btn-primary btn-sm", type:"submit"}, icon("plus"), "Hinzufügen"));
     body.appendChild(form);
 
-    if(cls.students.length){
-      const listWrap = el("div",{class:"table-wrap", style:"margin-top:14px;"});
-      const table = el("table",{});
-      table.appendChild(el("thead",{}, el("tr",{}, el("th",{},"Name"), el("th",{},""))));
-      const tbody = el("tbody",{});
-      cls.students.forEach(s=>{
-        tbody.appendChild(el("tr",{},
-          el("td",{},s.name),
-          el("td",{}, el("div",{class:"row-actions"}, el("button",{class:"icon-btn", title:"Entfernen", onclick:()=>removeStudent(cls,s.id)}, icon("trash"))))
-        ));
-      });
-      table.appendChild(tbody);
-      listWrap.appendChild(table);
-      body.appendChild(listWrap);
-    }
     card.appendChild(body);
     return card;
   }
@@ -1908,7 +1909,23 @@
       el("option",{value:"einfach"}, templateOptionLabel(state.subjectTemplates.einfach)),
       el("option",{value:"sprachfach"}, templateOptionLabel(state.subjectTemplates.sprachfach))
     );
-    const addForm = el("form",{class:"form-row", onsubmit:(e)=>{
+    if(cls.subjects.length){
+      const listWrap = el("div",{class:"table-wrap"});
+      const table = el("table",{});
+      table.appendChild(el("thead",{}, el("tr",{}, el("th",{},"Name"), el("th",{},""))));
+      const tbody = el("tbody",{});
+      cls.subjects.forEach(subject=>{
+        tbody.appendChild(el("tr",{},
+          el("td",{},subject.name),
+          el("td",{}, el("div",{class:"row-actions"}, el("button",{class:"icon-btn", title:"Fach löschen", onclick:()=>removeSubject(cls, subject.id)}, icon("trash"))))
+        ));
+      });
+      table.appendChild(tbody);
+      listWrap.appendChild(table);
+      body.appendChild(listWrap);
+    }
+
+    const addForm = el("form",{class:"form-row", style:cls.subjects.length?"margin-top:14px;":undefined, onsubmit:(e)=>{
       e.preventDefault();
       const input = addForm.querySelector("input");
       const name = input.value.trim();
@@ -1925,22 +1942,6 @@
     addForm.appendChild(el("label",{class:"field"},"Vorlage", templateSel));
     addForm.appendChild(el("button",{class:"btn btn-primary btn-sm", type:"submit"}, icon("plus"), "Fach anlegen"));
     body.appendChild(addForm);
-
-    if(cls.subjects.length){
-      const listWrap = el("div",{class:"table-wrap", style:"margin-top:14px;"});
-      const table = el("table",{});
-      table.appendChild(el("thead",{}, el("tr",{}, el("th",{},"Name"), el("th",{},""))));
-      const tbody = el("tbody",{});
-      cls.subjects.forEach(subject=>{
-        tbody.appendChild(el("tr",{},
-          el("td",{},subject.name),
-          el("td",{}, el("div",{class:"row-actions"}, el("button",{class:"icon-btn", title:"Fach löschen", onclick:()=>removeSubject(cls, subject.id)}, icon("trash"))))
-        ));
-      });
-      table.appendChild(tbody);
-      listWrap.appendChild(table);
-      body.appendChild(listWrap);
-    }
 
     card.appendChild(body);
     return card;
@@ -3038,7 +3039,7 @@
     ));
 
     const results = []; // {student, perSubject:{subjectId:{raw,rounded}}, overallRaw}
-    cls.students.forEach(s=>{
+    cls.students.slice().sort((a,b)=>a.name.localeCompare(b.name)).forEach(s=>{
       const perSubject = {};
       let sum=0,n=0;
       cls.subjects.forEach(subj=>{
@@ -3153,7 +3154,7 @@
       headRow.appendChild(el("th",{},"Gesamt"));
       table.appendChild(el("thead",{}, headRow));
       const tbody = el("tbody",{});
-      results.slice().sort((a,b)=>a.student.name.localeCompare(b.student.name)).forEach(r=>{
+      results.forEach(r=>{
         const tr = el("tr",{}, el("td",{}, r.student.name));
         cls.subjects.forEach(s=>{
           const cell = r.perSubject[s.id];
